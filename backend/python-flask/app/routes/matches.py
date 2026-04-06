@@ -28,8 +28,27 @@ matches_bp = Blueprint('matches', __name__)
 
 @matches_bp.route('', methods=['GET'])
 def get_matches():
-    # TODO: Replace with your implementation (YOUR TASK #2)
-    return jsonify([]), 200
+    # 1. Extract optional query parameters
+    city_id = request.args.get('city')  # e.g., 'city-atlanta'
+    match_date = request.args.get('date')  # e.g., '2026-06-11'
+
+    query = Match.query
+
+    # 2. Filter by City
+    if city_id:
+        query = query.filter(Match.city_id == city_id)
+    
+    # 3. Filter by Date
+    if match_date:
+        # Using .contains() ignores the time part
+        query = query.filter(Match.kickoff.contains(match_date))
+
+    # 4. Order results by kickoff
+    matches = query.order_by(Match.kickoff.asc()).all()
+
+    # 5. Return the list using the model's to_dict method
+    # If this still 500s, use the manual mapping from my previous message
+    return jsonify([m.to_dict() for m in matches]), 200
 
 
 # ============================================================
@@ -45,5 +64,9 @@ def get_matches():
 
 @matches_bp.route('/<id>', methods=['GET'])
 def get_match_by_id(id):
-    # TODO: Replace with your implementation (YOUR TASK #2)
-    return jsonify({}), 200
+    match = Match.query.get(id)
+
+    if match is None:
+        return jsonify({"error": f"Match {id} not found"}), 404
+
+    return jsonify(match.to_dict()), 200
