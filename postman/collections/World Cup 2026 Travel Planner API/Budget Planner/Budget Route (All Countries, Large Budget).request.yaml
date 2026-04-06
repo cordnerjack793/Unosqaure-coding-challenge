@@ -1,0 +1,18 @@
+$kind: http-request
+description: |-
+  Test budget planner with generous budget and many matches.
+
+  Useful for verifying cost calculations are working correctly.
+url: "{{baseUrl}}/api/route/budget"
+method: POST
+headers:
+  Content-Type: application/json
+body:
+  type: text
+  content: >-
+    {
+        "budget": 10000.00,
+        "matchIds": ["match-1", "match-5", "match-9", "match-13", "match-17", "match-21", "match-25", "match-29"],
+        "originCityId": "city-houston"
+    }
+order: 4000

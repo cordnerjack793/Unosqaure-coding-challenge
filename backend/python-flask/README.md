@@ -23,10 +23,10 @@ python --version    # Should be 3.10.x or higher
 
 ```bash
 cd backend/python-flask
-python -m venv venv
+python3 -m venv venv
 source venv/bin/activate        # Windows: venv\Scripts\activate
-pip install -r requirements.txt
-python -m app.seed              # Seeds the SQLite database
+pip3 install -r requirements.txt
+python3 -m app.seed              # Seeds the SQLite database
 flask run --port 3008           # Starts the server on http://localhost:3008
 ```
 

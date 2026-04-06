@@ -1,0 +1,10 @@
+$kind: http-request
+description: |-
+  Filter matches by city ID.
+
+  Try different city IDs: city-atlanta, city-mexico-city, city-toronto, etc.
+url: "{{baseUrl}}/api/matches?city=city-atlanta"
+method: GET
+queryParams:
+  city: city-atlanta
+order: 2000

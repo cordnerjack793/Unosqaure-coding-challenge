@@ -1,0 +1,10 @@
+$kind: http-request
+description: >-
+  Returns all 16 host cities.
+
+
+  Expected response: Array of city objects with id, name, country, latitude,
+  longitude, stadium.
+url: "{{baseUrl}}/api/cities"
+method: GET
+order: 1000

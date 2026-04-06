@@ -1,0 +1,30 @@
+$kind: http-request
+description: |-
+  Plan a budget-constrained trip.
+
+  Request body:
+  - budget: Maximum budget in USD
+  - matchIds: Array of match IDs to attend
+  - originCityId: City where the trip starts
+
+  Expected response:
+  - feasible: true/false
+  - route: Optimised route (if feasible)
+  - costBreakdown: { flights, accommodation, tickets, total }
+  - countriesVisited: Array of countries covered
+  - missingCountries: Countries not covered (must include USA, Mexico, Canada)
+  - minimumBudgetRequired: Actual cost if over budget
+  - suggestions: Cost-saving recommendations
+url: "{{baseUrl}}/api/route/budget"
+method: POST
+headers:
+  Content-Type: application/json
+body:
+  type: text
+  content: |-
+    {
+        "budget": 5000.00,
+        "matchIds": ["match-1", "match-7", "match-13", "match-25", "match-37"],
+        "originCityId": "city-atlanta"
+    }
+order: 1000

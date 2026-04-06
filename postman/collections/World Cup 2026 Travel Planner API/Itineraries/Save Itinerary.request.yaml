@@ -1,0 +1,31 @@
+$kind: http-request
+description: |-
+  Save an optimised route as an itinerary.
+
+  Expected response: { id: string } with 201 Created status.
+url: "{{baseUrl}}/api/itineraries"
+method: POST
+headers:
+  Content-Type: application/json
+body:
+  type: text
+  content: |-
+    {
+        "strategy": "nearest-neighbour",
+        "totalDistance": 1234.56,
+        "stops": [
+            {
+                "stopNumber": 1,
+                "matchId": "match-1",
+                "cityId": "city-atlanta",
+                "distanceFromPrevious": 0
+            },
+            {
+                "stopNumber": 2,
+                "matchId": "match-5",
+                "cityId": "city-miami",
+                "distanceFromPrevious": 1234.56
+            }
+        ]
+    }
+order: 1000

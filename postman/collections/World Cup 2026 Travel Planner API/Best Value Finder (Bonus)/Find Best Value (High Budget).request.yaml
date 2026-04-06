@@ -1,0 +1,17 @@
+$kind: http-request
+description: |-
+  Test best value finder with a generous budget.
+
+  Expected: More matches selected while staying within budget.
+url: "{{baseUrl}}/api/route/best-value"
+method: POST
+headers:
+  Content-Type: application/json
+body:
+  type: text
+  content: |-
+    {
+        "budget": 15000.00,
+        "originCityId": "city-houston"
+    }
+order: 3000

@@ -1,0 +1,8 @@
+$kind: http-request
+description: |-
+  Get a single match by ID.
+
+  Returns 404 if not found.
+url: "{{baseUrl}}/api/matches/match-1"
+method: GET
+order: 5000

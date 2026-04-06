@@ -1,0 +1,5 @@
+$kind: collection
+name: World Cup 2026 Travel Planner API
+description: API collection for testing the World Cup 2026 Travel Route Planner endpoints.
+variables:
+  baseUrl: http://localhost:3008

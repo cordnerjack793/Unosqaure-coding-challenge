@@ -1,0 +1,13 @@
+# Use this workspace to collaborate
+workspace:
+  id: 52d0f61c-a567-4473-8e8d-181aa3b2023a
+
+cloudResources:
+  collections:
+    ../postman/collections/World Cup 2026 Travel Planner API: a5064f77-cff4-4f15-a8c0-5d8525ae1156
+
+# All resources in the `postman/` folder are automatically registered in Local View.
+# Point to additional files outside the `postman/` folder to register them individually. Example:
+#localResources:
+#  collections:
+#    - ../tests/E2E Test Collection/

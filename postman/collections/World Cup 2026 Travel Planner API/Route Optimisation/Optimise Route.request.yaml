@@ -1,0 +1,18 @@
+$kind: http-request
+description: |-
+  Optimise travel route for selected matches.
+
+  Request body: { "matchIds": ["match-1", "match-5", ...] }
+
+  Expected response: { stops: [...], totalDistance: number, strategy: string }
+url: "{{baseUrl}}/api/route/optimise"
+method: POST
+headers:
+  Content-Type: application/json
+body:
+  type: text
+  content: |-
+    {
+        "matchIds": ["match-1", "match-5", "match-12", "match-20"]
+    }
+order: 1000

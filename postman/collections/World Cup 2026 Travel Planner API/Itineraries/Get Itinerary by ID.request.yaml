@@ -1,0 +1,10 @@
+$kind: http-request
+description: |-
+  Retrieve a saved itinerary by ID.
+
+  Replace {{itineraryId}} with the ID returned from Save Itinerary.
+
+  Returns 404 if not found.
+url: "{{baseUrl}}/api/itineraries/{{itineraryId}}"
+method: GET
+order: 2000

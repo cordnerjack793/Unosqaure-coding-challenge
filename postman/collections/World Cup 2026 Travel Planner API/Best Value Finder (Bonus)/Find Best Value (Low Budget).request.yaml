@@ -1,0 +1,17 @@
+$kind: http-request
+description: |-
+  Test best value finder with a lower budget.
+
+  Should still find at least 5 matches covering all 3 countries if possible.
+url: "{{baseUrl}}/api/route/best-value"
+method: POST
+headers:
+  Content-Type: application/json
+body:
+  type: text
+  content: |-
+    {
+        "budget": 2500.00,
+        "originCityId": "city-mexico-city"
+    }
+order: 2000

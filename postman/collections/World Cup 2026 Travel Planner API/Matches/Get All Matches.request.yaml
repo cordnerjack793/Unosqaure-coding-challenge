@@ -1,0 +1,10 @@
+$kind: http-request
+description: >-
+  Returns all matches ordered by kickoff date.
+
+
+  Expected response: Array of match objects with homeTeam, awayTeam, city (full
+  objects), kickoff, group, matchDay.
+url: "{{baseUrl}}/api/matches"
+method: GET
+order: 1000

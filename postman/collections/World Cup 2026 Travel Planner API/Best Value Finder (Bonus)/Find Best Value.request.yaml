@@ -1,0 +1,33 @@
+$kind: http-request
+description: |-
+  BONUS CHALLENGE: Find the best combination of matches within budget.
+
+  Request body:
+  - budget: Maximum budget in USD
+  - originCityId: City where the trip starts
+
+  Expected response:
+  - withinBudget: true/false
+  - matches: Array of selected matches
+  - route: Optimised travel route
+  - costBreakdown: { flights, accommodation, tickets, total }
+  - countriesVisited: Array of countries covered
+  - matchCount: Number of matches selected
+  - message: Description of the result
+
+  Constraints:
+  - Must include at least 1 match in each country (USA, Mexico, Canada)
+  - Minimum 5 matches required
+  - Maximise number of matches within budget
+url: "{{baseUrl}}/api/route/best-value"
+method: POST
+headers:
+  Content-Type: application/json
+body:
+  type: text
+  content: |-
+    {
+        "budget": 5000.00,
+        "originCityId": "city-atlanta"
+    }
+order: 1000

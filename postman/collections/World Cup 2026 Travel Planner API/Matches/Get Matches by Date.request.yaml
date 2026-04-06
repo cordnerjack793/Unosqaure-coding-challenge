@@ -1,0 +1,7 @@
+$kind: http-request
+description: Filter matches by date (YYYY-MM-DD format).
+url: "{{baseUrl}}/api/matches?date=2026-06-14"
+method: GET
+queryParams:
+  date: 2026-06-14
+order: 3000

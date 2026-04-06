@@ -1,0 +1,18 @@
+$kind: http-request
+description: |-
+  Test budget planner with insufficient budget.
+
+  Expected: feasible=false with minimumBudgetRequired and suggestions.
+url: "{{baseUrl}}/api/route/budget"
+method: POST
+headers:
+  Content-Type: application/json
+body:
+  type: text
+  content: |-
+    {
+        "budget": 1500.00,
+        "matchIds": ["match-1", "match-7", "match-13", "match-25", "match-37"],
+        "originCityId": "city-atlanta"
+    }
+order: 2000

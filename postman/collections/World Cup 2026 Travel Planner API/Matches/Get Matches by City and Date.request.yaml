@@ -1,0 +1,8 @@
+$kind: http-request
+description: Filter matches by both city and date.
+url: "{{baseUrl}}/api/matches?city=city-atlanta&date=2026-06-14"
+method: GET
+queryParams:
+  city: city-atlanta
+  date: 2026-06-14
+order: 4000

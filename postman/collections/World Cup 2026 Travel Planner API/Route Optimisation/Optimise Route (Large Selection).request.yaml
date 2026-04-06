@@ -1,0 +1,16 @@
+$kind: http-request
+description: |-
+  Test route optimisation with a larger selection of matches.
+
+  Compare totalDistance between DateOnlyStrategy and NearestNeighbourStrategy.
+url: "{{baseUrl}}/api/route/optimise"
+method: POST
+headers:
+  Content-Type: application/json
+body:
+  type: text
+  content: >-
+    {
+        "matchIds": ["match-1", "match-2", "match-3", "match-4", "match-5", "match-6", "match-7", "match-8"]
+    }
+order: 2000
