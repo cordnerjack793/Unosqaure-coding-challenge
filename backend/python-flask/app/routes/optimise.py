@@ -4,6 +4,7 @@ from app.models.flight_price import FlightPrice
 from app.strategies.nearest_neighbour_strategy import NearestNeighbourStrategy
 # Tip: You can also import DateOnlyStrategy to compare results
 # from app.strategies.date_only_strategy import DateOnlyStrategy
+from app.strategies.date_only_strategy import DateOnlyStrategy
 
 optimise_bp = Blueprint('optimise', __name__)
 
@@ -38,9 +39,26 @@ optimise_bp = Blueprint('optimise', __name__)
 
 @optimise_bp.route('/optimise', methods=['POST'])
 def optimise():
-    # TODO: Replace with your implementation (YOUR TASK #3)
-    return jsonify({}), 200
+    # 1. Extract matchIds from the request JSON
+    data = request.get_json()
 
+    match_ids = data.get('matchIds') 
+    # match_ids is now a list: ["match-1", "match-5", ...]
+
+    # 2. Fetch full match data from the database
+    matches = Match.query.filter(Match.id.in_(match_ids)).all()
+
+    # 3. Convert matches to dicts (using match.to_dict())
+    match_dicts = [m.to_dict() for m in matches]
+
+    # 4. Create a strategy instance
+    strategy = NearestNeighbourStrategy()
+    
+    # 5. Call the optimise method on our strategy
+    optimised_route = strategy.optimise(match_dicts)
+    
+    # 6. Return the optimised route as JSON
+    return jsonify(optimised_route), 200
 
 # ============================================================
 #  POST /api/route/budget — Calculate trip costs and check budget
