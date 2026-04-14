@@ -150,24 +150,30 @@ function RouteMap({ route, originCity }: RouteMapProps) {
                     - <span className="popup-match-date"> for the date
               */}
 
-              {/* ============================================================
-                IMPLEMENTATION: Render match details for each stop
-                ============================================================ */}
+              {/* Loop through all stops in this city. 
+              Note: Using .map() is crucial here because groupStopsByCity() might 
+              return multiple matches for the same location.
+            */}
               {stops.map((stop) => (
-                <div key={stop.match.id} className="popup-match" style={{ marginBottom: '8px' }}>
-                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                    <span className="popup-match-number">Stop #{stop.stopNumber}</span>
-                    <span className="popup-match-date">
-                      {new Date(stop.match.kickoff).toLocaleDateString()}
-                    </span>
+                <div key={stop.stopNumber} className="popup-match">
+                  {/* Match identification (e.g., #1 Mexico vs South Africa) */}
+                  <div>
+                    <span className="popup-match-number">#{stop.stopNumber}</span>
+                    <strong>
+                      {stop.match.homeTeam.name} vs {stop.match.awayTeam.name}
+                    </strong>
                   </div>
-                  <div style={{ fontWeight: '500', marginTop: '2px' }}>
-                    {stop.match.homeTeam.name} vs {stop.match.awayTeam.name}
+
+                  {/* Kickoff date: converts the ISO date string from the data 
+                  into the normal format (e.g., "11/06/2026") 
+                */}
+                  <div className="popup-match-date">
+                    {new Date(stop.match.kickoff).toLocaleDateString()}
                   </div>
                 </div>
               ))}
-            </Popup>
 
+            </Popup>
           </Marker>
         );
       })}

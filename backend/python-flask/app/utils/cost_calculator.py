@@ -85,76 +85,84 @@ class CostCalculator:
 
 
         # 1. Calculate ticket costs
-        ticket_total = sum(match.get('ticketPrice', 0) for match in matches)
+        ticket_total = sum(float(m.get('ticketPrice', 0)) for m in matches)
 
         # 2. Calculate flight costs
         flight_total = 0
-        current_loc = origin_city_id
-        for match in matches:
-            dest_city = match.get('cityId') or match.get('city_id')
-            flight_total += self.get_flight_price(current_loc, dest_city, flight_prices)
-            current_loc = dest_city
+        starting_location = str(origin_city_id)
         
-        # 3. Calculate accommodation costs
-        accommodation_total = 0
-        if matches:
-            first_city = matches[0].get('city', {})
-            accommodation_total += first_city.get('accommodationPerNight', 0) or first_city.get('accommodation_per_night', 0)
-            
-            for i in range(len(matches) - 1):
-                nights = self.calculate_nights_between(matches[i]['kickoff'], matches[i+1]['kickoff'])
-                city_info = matches[i].get('city', {})
-                rate = city_info.get('accommodationPerNight', 0) or city_info.get('accommodation_per_night', 0)
-                accommodation_total += (nights * rate)
-
-        # 4. Build Cost Breakdown
-        total_cost = ticket_total + flight_total + accommodation_total
-
-        # --- 5. FIXED COUNTRY CHECK (DO NOT USE HELPER HERE) ---
-        visited_set = set()
         for m in matches:
-            # Look for country in nested city object OR top level
-            city_data = m.get('city', {})
-            c_name = city_data.get('country') if isinstance(city_data, dict) else m.get('country')
+            # Gets the next city on the list
+            next_city = str((m.get('city')).get('id'))
             
-            if c_name:
-                c_clean = str(c_name).strip().lower()
-                if 'usa' in c_clean or 'united states' in c_clean:
-                    visited_set.add('USA')
-                elif 'mexico' in c_clean:
-                    visited_set.add('Mexico')
-                elif 'canada' in c_clean:
-                    visited_set.add('Canada')
-
-        # Calculate missing based on our cleaned set
-        missing = [c for c in self.REQUIRED_COUNTRIES if c not in visited_set]
+            # Gets the total flight cost for all flights
+            flight_total += self.get_flight_price(starting_location, next_city, flight_prices)
+            
+            # Update current location to move to the next city in the sequence
+            starting_location = next_city
+            
+            
+        # 3. Calculate accommodation costs:
+        accommodation_total = 0
+        for i in range(len(matches)):
+            current_match = matches[i]
+            
+            # Get the nightly rate for the current city
+            current_city = current_match.get('city')
+            nightly_rate = float(current_city.get('accommodationPerNight'))
+            
+            # If there is another match after this one
+            if i < len(matches) - 1:
+                next_match = matches[i+1]
+                
+                # Get kickoffs for both matches to find the gap between the matches (number of nights)
+                current_kickoff = current_match.get('kickoff')
+                next_kickoff = next_match.get('kickoff')
         
-        # 6. Check feasibility
-        is_under_budget = total_cost <= budget
-        feasible = is_under_budget and (not missing)
+              
+                # Get the total price for the accommidation
+                accommodation_total += (self.calculate_nights_between(current_kickoff, next_kickoff) * nightly_rate)
+            else:
+                # Add this so it matches what is on the 'best_value_finder.pt'
+                # It is staying over after the last night before going home
+                accommodation_total += (1 * nightly_rate)
+                
 
-        # 7. Suggestions
-        suggestions = self.generate_suggestions(matches, total_cost, budget) if not feasible else []
+        # 4. Build CostBreakdown with all costs and total
+        breakdown = CostBreakdown(
+            tickets=round(ticket_total),
+            flights=round(flight_total),
+            accommodation=round(accommodation_total),
+            total=round(ticket_total+flight_total+accommodation_total)
+        )
 
-        # 8. Final Return
+
+        feasible = True
+        # 5. Check country constraint
+        visited = self.get_countries_visited(matches)
+        missing = self.get_missing_countries(visited)
+        
+        if len(missing) > 0:
+            feasible = False
+
+        # 6. Check budget constraint
+        if breakdown['total'] > budget:
+            feasible = False
+
+        # 7. Generate suggestions if not feasible:
+        suggestions = ""
+        if not feasible:
+            suggestions = self.generate_suggestions(budget, breakdown['total'], missing, matches)
+
+        # 8. Return BudgetResult with all results
         return {
             "feasible": feasible,
-            "breakdown": {
-                "tickets": ticket_total,
-                "flights": flight_total,
-                "accommodation": accommodation_total,
-                "total": total_cost
-            },
-            "totalCost": round(total_cost, 2),
-            "minimumBudgetRequired": round(total_cost, 2),
+            "costBreakdown": breakdown,
+            "countriesVisited": visited,
             "missingCountries": missing,
             "suggestions": suggestions
         }
-
-
-       
-   
-
+                
     # ============================================================
     # HELPER METHODS (Already implemented for you)
     # ============================================================

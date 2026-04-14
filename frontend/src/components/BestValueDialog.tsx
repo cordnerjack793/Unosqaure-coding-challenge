@@ -97,48 +97,36 @@ function BestValueDialog({ result, budget, onClose, onApply }: BestValueDialogPr
             </div>
           </div>
 
-          {/* Matches List — IMPLEMENTATION START */}
+          {/* Matches List */}
           <div className="best-value-matches">
             <h4>Recommended Matches ({matchCount})</h4>
             <ul className="match-list">
               {matches.map((match) => {
-                // Format date and time for readability
                 const kickoff = new Date(match.kickoff);
                 const dateStr = kickoff.toLocaleDateString('en-GB', { day: 'numeric', month: 'short' });
                 const timeStr = kickoff.toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit' });
-                
                 return (
                   <li key={match.id} className="match-item">
-                    {/* Display Team names, handling both object and string data */}
                     <div className="match-teams">
-                      {String(match.homeTeam?.name || match.homeTeam)} vs {String(match.awayTeam?.name || match.awayTeam)}
+                      {match.homeTeam.name} vs {match.awayTeam.name}
                     </div>
-                    
                     <div className="match-details">
-                      {/* City Name */}
-                      <span>{String(match.city?.name || match.city)}</span>
-                      
-                      {/* Date and Time */}
+                      <span>{match.city.name}</span>
                       <span>{dateStr}, {timeStr}</span>
-                      
-                      {/* Ticket Price with specific formatting */}
-                      <span className="ticket-price">
-                        ${Number(match.ticketPrice).toFixed(2)}
-                      </span>
+                      <span className="ticket-price">${match.ticketPrice}</span>
                     </div>
                   </li>
                 );
               })}
             </ul>
           </div>
-          {/* IMPLEMENTATION END */}
         </div>
 
         <div className="dialog-footer">
           <button className="btn btn-secondary" onClick={onClose}>
             Cancel
           </button>
-          <button className="btn btn-primary" onClick={onApply} disabled={!withinBudget}>
+          <button className="btn btn-primary" onClick={onApply}>
             Apply Selection
           </button>
         </div>

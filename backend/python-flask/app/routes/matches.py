@@ -28,27 +28,36 @@ matches_bp = Blueprint('matches', __name__)
 
 @matches_bp.route('', methods=['GET'])
 def get_matches():
-    # 1. Extract optional query parameters
-    city_id = request.args.get('city')  # e.g., 'city-atlanta'
-    match_date = request.args.get('date')  # e.g., '2026-06-11'
-
-    query = Match.query
-
-    # 2. Filter by City
-    if city_id:
-        query = query.filter(Match.city_id == city_id)
+    try:
     
-    # 3. Filter by Date
-    if match_date:
-        # Using .contains() ignores the time part
-        query = query.filter(Match.kickoff.contains(match_date))
+        # Extract optional query parameters
+        city_id = request.args.get('city')  # e.g., 'city-atlanta'
+        match_date = request.args.get('date')  # e.g., '2026-06-11'
 
-    # 4. Order results by kickoff
-    matches = query.order_by(Match.kickoff.asc()).all()
+        # Start building the query
+        query = Match.query
 
-    # 5. Return the list using the model's to_dict method
-    # If this still 500s, use the manual mapping from my previous message
-    return jsonify([m.to_dict() for m in matches]), 200
+        # Filter by City ID
+        if city_id:
+            # Gets information about the games in a specific city using the city_id
+            query = query.filter_by(city_id=city_id)
+        
+        # Filter by Date
+        if match_date:
+            # Gets infromation about the games on a specific date using the match_date
+            # Using .contains() ignores the time part
+            query = query.filter(Match.kickoff.contains(match_date))
+            
+        
+        # Gets the information about the games and orders them by kickoff time in ascending order
+        matches = query.order_by(Match.kickoff).all()
+            
+        #  Return the list using the model's to_dict method
+        return jsonify([m.to_dict() for m in matches]), 200
+    
+    except Exception as e:
+         return jsonify({"error": str(e)}), 500
+
 
 
 # ============================================================
@@ -64,9 +73,12 @@ def get_matches():
 
 @matches_bp.route('/<id>', methods=['GET'])
 def get_match_by_id(id):
-    match = Match.query.get(id)
+    try:
+        # Get the match by ID using Match.query.get(id)
+        match = Match.query.get(id)
 
-    if match is None:
-        return jsonify({"error": f"Match {id} not found"}), 404
-
-    return jsonify(match.to_dict()), 200
+        # If the match is found, return its details as JSON using match.to_dict()
+        return jsonify(match.to_dict()), 200
+    
+    except Exception as e:
+         return jsonify({"error": str(e)}), 500

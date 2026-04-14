@@ -1,6 +1,9 @@
 from datetime import datetime
 from typing import TypedDict, Optional
 
+# Imported for step number 5
+from app.strategies.nearest_neighbour_strategy import NearestNeighbourStrategy
+
 
 class BestValueResult(TypedDict):
     """Response for best value finder."""
@@ -94,76 +97,122 @@ class BestValueFinder:
         #    - matchCount: number of matches
         #    - message: description of result
 
-        # 1. Ensure Country Coverage (Pick cheapest from USA, Mexico, Canada)
-        by_country = self.get_matches_by_country(all_matches)
+        # Array to store matches
         selected_matches = []
+
+        # 1. First, ensure country coverage:
+        # Get match info 
+        by_country = self.get_matches_by_country(all_matches)
         
         for country in self.REQUIRED_COUNTRIES:
-            options = by_country.get(country, [])
-            if not options:
-                return {
-                    "withinBudget": False, "matches": [], "route": None,
-                    "costBreakdown": {"flights": 0, "accommodation": 0, "tickets": 0, "total": 0},
-                    "countriesVisited": [], "matchCount": 0, 
-                    "message": f"Missing matches for {country}"
-                }
-            cheapest = min(options, key=lambda m: m.get('ticketPrice', 9999))
-            selected_matches.append(cheapest)
-
-        # 2. Sort remaining matches by "Value" (Lowest Ticket Price first)
+            options = by_country.get(country)
+            if options:
+                selected_matches.append(min(options, key=lambda m: m['ticketPrice']))
+        
+        # 2. Sort remaining matches by "value" (e.g., ticket price / quality)
+        # get matchIDs of games i have already
         picked_ids = {m['id'] for m in selected_matches}
+        
+        # Get the remaining games and sort by ticket price 
         remaining = [m for m in all_matches if m['id'] not in picked_ids]
-        remaining.sort(key=lambda m: m.get('ticketPrice', 9999))
-
-        # 3. Greedily add matches while staying in budget
-        for candidate in remaining:
-            cand_date = candidate.get('kickoff', '').split('T')[0]
-            if any(m.get('kickoff', '').split('T')[0] == cand_date for m in selected_matches):
+        remaining.sort(key=lambda m: m['ticketPrice'])
+        
+        # 3. Greedily add matches while staying within budget:
+        """
+        NOTE: I've added a check to ensure only one match is 
+        selected per day. While the prompt asks to maximize match count, 
+        In the real world time is required to travel between cities. 
+        This ensures the resulting trip is physically feasible for the user.
+        """
+        for match in remaining:
+            match_date = match['kickoff'].split('T')[0]
+            if any(m['kickoff'].split('T')[0] == match_date for m in selected_matches):
                 continue
+            test_match = selected_matches + [match]
+            
+            total_cost = self.calculate_trip_cost(
+                test_match, 
+                origin_city_id, 
+                flight_prices
+            )
+            
+            if total_cost <= budget:
+                selected_matches.append(match)
+                
+        # Initial sort by kickoff to prepare for strategy
+        selected_matches.sort(key=lambda m: m['kickoff'])
+     
+        # 4. Ensure minimum 5 matches
+        feasibility = len(selected_matches) >= 5
 
-            test_list = selected_matches + [candidate]
-            if self.calculate_trip_cost(test_list, origin_city_id, flight_prices) <= budget:
-                selected_matches = test_list
-
-        # 4. Final Validation & Data Prep
-        final_itinerary = sorted(selected_matches, key=lambda m: m.get('kickoff', ''))
-        total_cost = self.calculate_trip_cost(final_itinerary, origin_city_id, flight_prices)
+        if feasibility:
+            message = f"Found a trip with {len(selected_matches)} matches!"
+        else:
+            message = f"Could not find 5 matches within budget. Found {len(selected_matches)}."
         
-        # --- CALCULATE REAL BREAKDOWN ---
-        ticket_total = sum(m.get('ticketPrice', 0) for m in final_itinerary)
-        travel_costs = total_cost - ticket_total
+                
+        # 5. Build the optimised route using NearestNeighbour
+        # Create the strategy instance
+        strategy = NearestNeighbourStrategy()
+
+        # Pass your greedy selection into the optimizer
+        route_result = strategy.optimise(selected_matches)
         
-        # Split travel costs (Approx 40% flights, 60% hotels for the UI)
-        flight_amt = travel_costs * 0.4
-        hotel_amt = travel_costs * 0.6
-        # --------------------------------
+        
+        """
+        Here I am getting all of the price information
+        
+        I needed to calcuare the total and flight_total first
+        Then use this to find the total price for the accommodation
+        since there isnt a seperate helper function to do this with
+        """
+        
+        # Get final total price
+        final_total = self.calculate_trip_cost(selected_matches, origin_city_id, flight_prices)
+    
+        # Get Ticket total price
+        ticket_total = sum(m['ticketPrice'] for m in selected_matches)
+        
+        # Get Flight total price
+        flight_total = 0.0
+        if selected_matches:
+            # Getting the first flight cost
+            # From origin city to first match
+            flight_total += self.get_flight_price(
+                origin_city_id, 
+                selected_matches[0]['city']['id'], 
+                flight_prices
+            )
+          
+            #  Getting all of the prices for the flights and adding them together
+            for i in range(1, len(selected_matches)):
+                flight_total += self.get_flight_price(
+                    selected_matches[i - 1]['city']['id'],
+                    selected_matches[i]['city']['id'],
+                    flight_prices
+                )
 
-        is_valid = len(final_itinerary) >= 5
-        countries = list(set(m['city']['country'] for m in final_itinerary))
-
-        # 5. Build the Final Response
+        # accommodation total
+        accommodation_total = final_total - ticket_total - flight_total
+        
+        # 6. Return BestValueResult
         return {
-            "withinBudget": is_valid,
-            "matches": final_itinerary,
-            "route": {
-                "stops": [{"city": m['city'], "match": m} for m in final_itinerary],
-                "totalCost": round(total_cost, 2),
-                "feasible": is_valid,
-                "countriesVisited": countries
-            },
+            "withinBudget": feasibility,
+            "matches": selected_matches,
+            "route": route_result,
             "costBreakdown": {
-                "flights": round(flight_amt, 2),
-                "accommodation": round(hotel_amt, 2),
-                "tickets": round(ticket_total, 2),
-                "total": round(total_cost, 2)
+                "total": round(final_total),
+                "tickets": round(ticket_total),
+                "flights": round(flight_total),
+                "accommodation": round(accommodation_total)
             },
-            "countriesVisited": countries,
-            "matchCount": len(final_itinerary),
-            "message": "Optimal trip found!" if is_valid else f"Found {len(final_itinerary)} matches. 5 required for feasibility."
+            "countriesVisited": list(set(m['city']['country'] for m in selected_matches)),
+            "matchCount": len(selected_matches),
+            "message": message
         }
-    
-    
+        
 
+       
     # ============================================================
     # HELPER METHODS (Already implemented for you)
     # ============================================================
